@@ -79,10 +79,9 @@ const Item = ({ style, index, data, scrolling, readyInViewport }) => {
 };
 
 function App() {
+  const [palette, setPalette] = React.useState([...PALETTE]);
   const [selectedColors, setSelectedColors] = React.useState([...PALETTE]);
-  const [shuffledEntries, setShuffledEntries] = React.useState([
-    ...emojiColorsEntries
-  ]);
+  const [shuffledEntries, setShuffledEntries] = React.useState([...emojiColorsEntries]);
   const filterFn = React.useCallback(
     ([_, hexColor]) => selectedColors.includes(hexColor),
     [selectedColors]
@@ -113,12 +112,48 @@ function App() {
   }, []);
 
   const selectAll = React.useCallback(() => {
-    setSelectedColors([...PALETTE]);
-  }, []);
+    setSelectedColors([...palette]);
+  }, [palette]);
 
   const shownEntries = React.useMemo(() => {
     return shuffledEntries.filter(filterFn);
   }, [filterFn, shuffledEntries]);
+
+  const importJson = React.useCallback(async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      try {
+        const reader = new FileReader();
+        const importedData = await new Promise((resolve, reject) => {
+          reader.onload = (event) => {
+            try {
+              const json = JSON.parse(event.target.result);
+              resolve(json);
+            } catch (e) {
+              reject(new Error('Invalid JSON file'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+        
+        const newEntries = Object.entries(importedData);
+        // Get unique colors from imported data
+        const uniqueColors = [...new Set(newEntries.map(([_, color]) => color))];
+        setPalette(uniqueColors);
+        setSelectedColors(uniqueColors);
+        setShuffledEntries(newEntries);
+      } catch (error) {
+        console.error('Error importing JSON:', error);
+      }
+    };
+    
+    input.click();
+  }, []);
 
   return (
     <div style={{ position: "relative", padding: "0 12px" }}>
@@ -153,12 +188,16 @@ function App() {
           <Button shadow onClick={exportJson}>
             Export JSON
           </Button>
+          <Spacer w={1} />
+          <Button shadow onClick={importJson}>
+            Import JSON
+          </Button>
         </div>
       </div>
       <div style={{ height: "60px", width: "100%" }} />
       <Card style={{ marginBottom: "10px" }}>
         <Checkbox.Group value={selectedColors} onChange={handleCheck}>
-          {PALETTE.map((hexColor) => (
+          {palette.map((hexColor) => (
             <Checkbox key={hexColor} value={hexColor}>
               <Text
                 small
