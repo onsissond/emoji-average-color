@@ -155,6 +155,42 @@ function App() {
     input.click();
   }, []);
 
+  const importPalette = React.useCallback(async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      try {
+        const reader = new FileReader();
+        const importedColors = await new Promise((resolve, reject) => {
+          reader.onload = (event) => {
+            try {
+              const json = JSON.parse(event.target.result);
+              resolve(json);
+            } catch (e) {
+              reject(new Error('Invalid JSON file'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsText(file);
+        });
+        
+        if (!Array.isArray(importedColors)) {
+          throw new Error('Imported palette must be an array of colors');
+        }
+        
+        setPalette(importedColors);
+        setSelectedColors(importedColors);
+      } catch (error) {
+        console.error('Error importing palette:', error);
+      }
+    };
+    
+    input.click();
+  }, []);
+
   return (
     <div style={{ position: "relative", padding: "0 12px" }}>
       <div
@@ -191,6 +227,10 @@ function App() {
           <Spacer w={1} />
           <Button shadow onClick={importJson}>
             Import JSON
+          </Button>
+          <Spacer w={1} />
+          <Button shadow onClick={importPalette}>
+            Import Palette
           </Button>
         </div>
       </div>
