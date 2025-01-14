@@ -2,7 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { getClosestPaletteColorForAllEmojis } from "./getClosestPaletteColorForAllEmojis";
 import PALETTE from "./palette.json";
-import { downloadABlob } from "./downloader";
+import { downloadABlob } from "./downloader.ts";
 import { GeistProvider, CssBaseline } from "@geist-ui/core";
 import { Card, Button, Spacer, Checkbox, Text } from "@geist-ui/core";
 import VirtualGrid from "react-responsive-virtual-grid";
